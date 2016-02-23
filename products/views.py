@@ -1,28 +1,92 @@
 from django.http import Http404
 from django.shortcuts import render, get_object_or_404
+from django.views.generic.list import ListView
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import CreateView
+
 from .models import Product
-from .forms import ProductAddForm
+from .forms import ProductAddForm, ProductModelForm
+
+from digitalmarket.mixins import MultiSlugMixin
 # Create your views here.
+
+########################################################################################################  
+## class Based views
+########################################################################################################  
+
+class ProductCreateView(CreateView):
+  model = Product
+  template_name = "form.html"
+  form_class = ProductModelForm
+  success_url = '/products/'
+  
+  def get_context_data(self, *args, **kwargs):
+    context = super(ProductCreateView, self).get_context_data(*args, **kwargs)
+    context['submit_button'] = "Add Product"
+    return context
+    
+    
+
+class ProductDetailView(MultiSlugMixin, DetailView):
+  model = Product
+  
+  
+  
+class ProductListView(ListView):
+  model = Product
+  
+  def get_queryset(self, *args, **kwargs):
+      qs = super(ProductListView, self).get_queryset(**kwargs)
+      return qs
+  
+
+########################################################################################################  
+## Function base views  
+########################################################################################################  
 
 
 def create_view(request):
   # view of 1 item
   if request.user.is_authenticated():
-      form = ProductAddForm(request.POST or None)
+      form = ProductModelForm(request.POST or None)
       if form.is_valid():
-        data = form.cleaned_data
-        title = data.get('title')
-        description = data.get('description')
-        price = data.get('price')
-        new_product = Product.objects.create(title=title, description=description, price=price)
-      template = 'create_view.html'
+        instance = form.save(commit=False)
+        instance.sale_price = instance.price
+        instance.save()
+      template = 'form.html'
       context = {
-        "form" : form
+        "form" : form,
+        "submit_button" : "Create Product",
       }
   else:
     template = 'not_found.html'
     context = {}
   return render(request, template, context)
+
+
+
+def update_view(request, object_id=None):
+  # view of 1 item
+  if object_id is not None:
+    if request.user.is_authenticated():
+        product = get_object_or_404(Product, id=object_id)
+        form = ProductModelForm(request.POST or None, instance=product)
+        if form.is_valid():
+          instance = form.save(commit=False)
+          instance.save()
+        template = 'form.html'
+        context = {
+          "product" : product, 
+          "form" : form,
+          "submit_button" : "Update Product",
+        }
+    else:
+      template = 'not_found.html'
+      context = {}
+    return render(request, template, context)
+  else:
+    raise Http404
+
 
 
 def detail_slug_view(request, slug=None):
@@ -54,6 +118,8 @@ def detail_view(request, object_id=None):
     return render(request, template, context)
   else:
     raise Http404
+  
+
 
 def list_view(request):
   # view of multiple items
