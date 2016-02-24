@@ -5,7 +5,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 
 from .models import Product
-from .forms import ProductAddForm, ProductModelForm
+from .forms import ProductModelForm
 
 from digitalmarket.mixins import MultiSlugMixin, SubmitButtonMixin
 # Create your views here.

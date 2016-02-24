@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from django.conf import settings
 from django.db.models.signals import pre_save
 from django.utils.text import slugify
 
@@ -7,8 +8,9 @@ from django.db import models
 # Create your models here.
 
 class Product(models.Model):
+  user = models.ForeignKey(settings.AUTH_USER_MODEL)
   title = models.CharField(max_length=30) # title string creation
-  slug = models.SlugField(blank=True)
+  slug = models.SlugField(blank=True, unique=True)
   description = models.TextField()
   price = models.DecimalField(max_digits=100, decimal_places=2, default=9.99, null=True, blank=True)
   sale_price = models.DecimalField(max_digits=100, decimal_places=2, default= 6.99, null=True, blank=True)
@@ -16,9 +18,23 @@ class Product(models.Model):
   def __str__(self):
     return self.title # returns the title name of the product when you print the object
   
+  
+  
+def create_slug(instance, new_slug=None):
+  slug = slugify(instance.title)
+  if new_slug is not None:
+    slug = new_slug
+  qs = Product.objects.filter(slug=slug)
+  exists = qs.exists()
+  if exists:
+    new_slug = "%s-%s" % (slug, qs.first().id)
+    return create_slug(instance, new_slug=new_slug)
+  
+  return slug
+  
 def product_pre_save_receiver(sender, instance, *args, **kwargs):
   if not instance.slug:
-    instance.slug = slugify(instance.title)
+    instance.slug = create_slug(instance)
     
     
 pre_save.connect(product_pre_save_receiver, sender=Product)
