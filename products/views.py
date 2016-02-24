@@ -2,35 +2,42 @@ from django.http import Http404
 from django.shortcuts import render, get_object_or_404
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView
 
 from .models import Product
 from .forms import ProductAddForm, ProductModelForm
 
-from digitalmarket.mixins import MultiSlugMixin
+from digitalmarket.mixins import MultiSlugMixin, SubmitButtonMixin
 # Create your views here.
+
 
 ########################################################################################################  
 ## class Based views
 ########################################################################################################  
 
-class ProductCreateView(CreateView):
+class ProductCreateView(SubmitButtonMixin, CreateView):
   model = Product
   template_name = "form.html"
   form_class = ProductModelForm
   success_url = '/products/'
+  submit_button = 'Add Product'
+    
+##################################################################
+
+class ProductUpdateView(SubmitButtonMixin, MultiSlugMixin, UpdateView):
+  model = Product
+  template_name = "form.html"
+  form_class = ProductModelForm
+  success_url = '/products/'
+  submit_button = 'Update Product'
+
   
-  def get_context_data(self, *args, **kwargs):
-    context = super(ProductCreateView, self).get_context_data(*args, **kwargs)
-    context['submit_button'] = "Add Product"
-    return context
-    
-    
+##################################################################
 
 class ProductDetailView(MultiSlugMixin, DetailView):
   model = Product
   
-  
+##################################################################
   
 class ProductListView(ListView):
   model = Product
@@ -63,7 +70,7 @@ def create_view(request):
     context = {}
   return render(request, template, context)
 
-
+##################################################################
 
 def update_view(request, object_id=None):
   # view of 1 item
@@ -87,7 +94,7 @@ def update_view(request, object_id=None):
   else:
     raise Http404
 
-
+##################################################################
 
 def detail_slug_view(request, slug=None):
   # view of 1 item
@@ -102,6 +109,7 @@ def detail_slug_view(request, slug=None):
     context = {}
   return render(request, template, context)
 
+##################################################################
 
 def detail_view(request, object_id=None):
   # view of 1 item
@@ -119,7 +127,7 @@ def detail_view(request, object_id=None):
   else:
     raise Http404
   
-
+##################################################################
 
 def list_view(request):
   # view of multiple items

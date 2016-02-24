@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from products.views import ProductListView, ProductDetailView, ProductCreateView
+from products.views import ProductListView, ProductDetailView, ProductCreateView, ProductUpdateView
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -29,4 +29,8 @@ urlpatterns = [
     url(r'^products/add/$', ProductCreateView.as_view(), name='product_create_view'),
     url(r'^products/(?P<pk>\d+)/$', ProductDetailView.as_view(), name='product_detail_view'),
     url(r'^products/(?P<slug>[\w-]+)/$', ProductDetailView.as_view(), name='product_detail_slug_view'),
+    url(r'^products/(?P<pk>\d+)/edit/$', ProductUpdateView.as_view(), name='product_update_view'),
+    url(r'^products/(?P<slug>[\w-]+)/edit/$', ProductUpdateView.as_view(), name='product_update_slug_view'),
+
+
 ]
